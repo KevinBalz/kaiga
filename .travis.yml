@@ -7,3 +7,13 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
+
+env:
+  global:
+    - KAIGA_HEADLESS_TESTS=1
+
+addons:
+  apt:
+    packages:
+    - libxxf86vm-dev
+    - libosmesa6-dev
