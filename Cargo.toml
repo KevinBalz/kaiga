@@ -4,3 +4,9 @@ version = "0.1.0"
 authors = ["Kevin Balz <kevin.balz@web.de>"]
 
 [dependencies]
+glium = "*"
+cgmath = "*"
+
+[[example]]
+name = "rectangles"
+path = "examples/rectangles/main.rs"
