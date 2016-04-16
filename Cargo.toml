@@ -1,0 +1,6 @@
+[package]
+name = "kaiga"
+version = "0.1.0"
+authors = ["Kevin Balz <kevin.balz@web.de>"]
+
+[dependencies]
