@@ -3,19 +3,38 @@ extern crate glium;
 extern crate cgmath;
 
 use glium::Surface;
+use std::rc::Rc;
+
+pub struct Device {
+    context: Rc<glium::backend::Context>,
+    rect_data: RectData
+}
+
+impl Device {
+
+    pub fn new(context: &Rc<glium::backend::Context>) -> Device {
+        let rect_data = init_rectangle(context);
+        Device { context: context.clone(),rect_data: rect_data}
+    }
+
+    pub fn begin(&self) -> Drawer {
+        Drawer::new(self)
+    }
+}
 
 pub struct Drawer<'s> {
     frame: glium::Frame,
-    rect_data: RectData,
+    device: &'s Device,
     projection: [[f32; 4]; 4],
     params: glium::DrawParameters<'s>,
 }
 
 impl<'s> Drawer<'s> {
-    pub fn new(display: &glium::Display) -> Drawer<'s> {
-        let frame = display.draw();
+    pub fn new(device: &'s Device) -> Drawer<'s> {
+        let (w, h) = device.context.get_framebuffer_dimensions();
+        let frame = glium::Frame::new(device.context.clone(), (w, h) );
         let mut params: glium::DrawParameters = Default::default();
-        let (w, h) = frame.get_dimensions();
+
         params.viewport = Some(glium::Rect {
             left: 0,
             bottom: 0,
@@ -24,11 +43,10 @@ impl<'s> Drawer<'s> {
         });
         let projection = cgmath::ortho(0.0, w as f32, h as f32, 0.0, 0.0, 100.0).into();
 
-        let rect_data = init_rectangle(display);
         Drawer {
             frame: frame,
             params: params,
-            rect_data: rect_data,
+            device: device,
             projection: projection,
         }
     }
@@ -61,7 +79,7 @@ struct RectData {
     pub program: glium::Program,
 }
 
-fn init_rectangle(display: &glium::Display) -> RectData {
+fn init_rectangle(context: &Rc<glium::backend::Context>) -> RectData {
     let shape = [RectVertex { position: [0.0, 0.0] },
                  RectVertex { position: [1.0, 0.0] },
                  RectVertex { position: [0.0, 1.0] },
@@ -70,10 +88,10 @@ fn init_rectangle(display: &glium::Display) -> RectData {
                  RectVertex { position: [1.0, 0.0] },
                  RectVertex { position: [1.0, 1.0] }];
 
-    let vertex_buffer = glium::VertexBuffer::new(display, &shape).unwrap();
+    let vertex_buffer = glium::VertexBuffer::new(context, &shape).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
-    let program = glium::Program::from_source(display,
+    let program = glium::Program::from_source(context,
                                               include_str!("shader/rectangle.v.glsl"),
                                               include_str!("shader/rectangle.f.glsl"),
                                               None)
@@ -93,9 +111,9 @@ fn draw_rectangle(drawer: &mut Drawer, x: i32, y: i32, width: i32, height: i32, 
     let model: [[f32; 4]; 4] = (trans * scale).into();
 
     drawer.frame
-          .draw(&drawer.rect_data.vertex_buffer,
-                &drawer.rect_data.indices,
-                &drawer.rect_data.program,
+          .draw(&drawer.device.rect_data.vertex_buffer,
+                &drawer.device.rect_data.indices,
+                &drawer.device.rect_data.program,
                 &uniform! {
         color: color,
         projection: drawer.projection,

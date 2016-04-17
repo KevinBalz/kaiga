@@ -3,9 +3,12 @@ extern crate kaiga;
 
 fn main() {
     use glium::DisplayBuild;
+    use glium::backend::Facade;
     let display = glium::glutin::WindowBuilder::new()
         .with_title("Rectangles example".to_string())
         .build_glium().unwrap();
+
+    let device = kaiga::Device::new(display.get_context());
 
     loop {
 
@@ -17,7 +20,7 @@ fn main() {
             }
         }
 
-        let mut drawer = kaiga::Drawer::new(&display);
+        let mut drawer = device.begin();
 
         drawer.clear(0.0,0.0,0.0);
 
