@@ -8,18 +8,17 @@ use std::rc::Rc;
 pub struct Device {
     context: Rc<glium::backend::Context>,
     rect_data: RectData,
-    image_data: ImageData
+    image_data: ImageData,
 }
 
 impl Device {
-
     pub fn new(context: &Rc<glium::backend::Context>) -> Device {
         let rect_data = init_rectangle(context);
         let image_data = init_image(context);
         Device {
             context: context.clone(),
             rect_data: rect_data,
-            image_data: image_data
+            image_data: image_data,
         }
     }
 
@@ -38,7 +37,7 @@ pub struct Drawer<'s> {
 impl<'s> Drawer<'s> {
     pub fn new(device: &'s Device) -> Drawer<'s> {
         let (w, h) = device.context.get_framebuffer_dimensions();
-        let frame = glium::Frame::new(device.context.clone(), (w, h) );
+        let frame = glium::Frame::new(device.context.clone(), (w, h));
         let mut params: glium::DrawParameters = Default::default();
 
         params.viewport = Some(glium::Rect {
@@ -62,8 +61,8 @@ impl<'s> Drawer<'s> {
         draw_rectangle(self, x, y, width, height, color)
     }
 
-    pub fn draw_image(&mut self,image: &Texture,x: i32,y: i32,scale: i32) {
-        draw_image(self,image,x,y,scale)
+    pub fn draw_image(&mut self, image: &Texture, x: i32, y: i32, scale: i32) {
+        draw_image(self, image, x, y, scale)
     }
 
 
@@ -127,24 +126,26 @@ fn draw_rectangle(drawer: &mut Drawer, x: i32, y: i32, width: i32, height: i32, 
                 &drawer.device.rect_data.indices,
                 &drawer.device.rect_data.program,
                 &uniform! {
-        color: color,
-        projection: drawer.projection,
-        model: model },
+                    color: color,
+                    projection: drawer.projection,
+                    model: model },
                 &drawer.params)
           .unwrap();
 }
 
 pub struct Texture {
     tex: glium::texture::CompressedSrgbTexture2d,
-    dimensions: (u32, u32)
+    dimensions: (u32, u32),
 }
 
 impl Texture {
-
     pub fn new(device: &Device, pixels: Vec<u8>, dimensions: (u32, u32)) -> Self {
         let raw = glium::texture::RawImage2d::from_raw_rgba(pixels, dimensions);
         let tex = glium::texture::CompressedSrgbTexture2d::new(&device.context, raw).unwrap();
-        Texture { tex: tex, dimensions: dimensions }
+        Texture {
+            tex: tex,
+            dimensions: dimensions,
+        }
     }
 }
 
@@ -165,13 +166,31 @@ struct ImageData {
 }
 
 fn init_image(context: &Rc<glium::backend::Context>) -> ImageData {
-    let shape = [ImageVertex { position: [0.0, 0.0], texcoord: [0.0, 0.0] },
-                 ImageVertex { position: [1.0, 0.0], texcoord: [1.0, 0.0] },
-                 ImageVertex { position: [0.0, 1.0], texcoord: [0.0, 1.0] },
+    let shape = [ImageVertex {
+                     position: [0.0, 0.0],
+                     texcoord: [0.0, 0.0],
+                 },
+                 ImageVertex {
+                     position: [1.0, 0.0],
+                     texcoord: [1.0, 0.0],
+                 },
+                 ImageVertex {
+                     position: [0.0, 1.0],
+                     texcoord: [0.0, 1.0],
+                 },
 
-                 ImageVertex { position: [0.0, 1.0], texcoord: [0.0, 1.0] },
-                 ImageVertex { position: [1.0, 0.0], texcoord: [1.0, 0.0] },
-                 ImageVertex { position: [1.0, 1.0], texcoord: [1.0, 1.0] }];
+                 ImageVertex {
+                     position: [0.0, 1.0],
+                     texcoord: [0.0, 1.0],
+                 },
+                 ImageVertex {
+                     position: [1.0, 0.0],
+                     texcoord: [1.0, 0.0],
+                 },
+                 ImageVertex {
+                     position: [1.0, 1.0],
+                     texcoord: [1.0, 1.0],
+                 }];
 
     let vertex_buffer = glium::VertexBuffer::new(context, &shape).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
@@ -189,11 +208,13 @@ fn init_image(context: &Rc<glium::backend::Context>) -> ImageData {
     }
 }
 
-pub fn draw_image(drawer: &mut Drawer,image: &Texture,x: i32,y: i32,scale: i32) {
-    let (width,height) = image.dimensions;
+pub fn draw_image(drawer: &mut Drawer, image: &Texture, x: i32, y: i32, scale: i32) {
+    let (width, height) = image.dimensions;
     let scale = scale as u32;
     let trans = cgmath::Matrix4::from_translation(cgmath::Vector3::new(x as f32, y as f32, 0.0));
-    let scale = cgmath::Matrix4::from_nonuniform_scale( (width * scale) as f32, (height * scale) as f32, 1.0);
+    let scale = cgmath::Matrix4::from_nonuniform_scale((width * scale) as f32,
+                                                       (height * scale) as f32,
+                                                       1.0);
 
     let model: [[f32; 4]; 4] = (trans * scale).into();
 
