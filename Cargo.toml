@@ -6,7 +6,12 @@ authors = ["Kevin Balz <kevin.balz@web.de>"]
 [dependencies]
 glium = "*"
 cgmath = "*"
+image = "*"
 
 [[example]]
 name = "rectangles"
 path = "examples/rectangles/main.rs"
+
+[[example]]
+name = "image"
+path = "examples/image/main.rs"
