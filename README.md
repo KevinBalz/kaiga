@@ -1,4 +1,4 @@
-# kaiga
+# kaiga [![Build Status](https://travis-ci.org/KevinBalz/kaiga.svg?branch=master)](https://travis-ci.org/KevinBalz/kaiga)
 
 A 2D drawing library in rust.
 
