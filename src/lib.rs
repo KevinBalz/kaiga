@@ -2,7 +2,7 @@
 extern crate glium;
 extern crate cgmath;
 
-use glium::Surface;
+use glium::{Surface,Version, Api};
 use std::rc::Rc;
 
 pub struct Device {
@@ -75,6 +75,26 @@ impl<'s> Drawer<'s> {
     }
 }
 
+macro_rules! include_shader {
+    ($name:expr,$version:expr,$ty:expr) => (
+        include_str!(concat!("shader/",$name,"_",$version,".",$ty,".glsl"))
+    )
+}
+
+macro_rules! get_shader_source {
+    ($context:expr,$name:expr) => (
+        if $context.is_glsl_version_supported(&Version(Api::Gl,1,2)) {
+            (include_shader!($name,120,"v"),include_shader!($name,120,"f"))
+        }
+        else if $context.is_glsl_version_supported(&Version(Api::Gl,1,5)) {
+            (include_shader!($name,150,"v"),include_shader!($name,150,"f"))
+        }
+        else {
+            panic!("unsupported GLSL Version {:?}", $context.get_supported_glsl_version());
+        }
+    )
+}
+
 // Rectangle Helpers
 
 #[derive(Copy, Clone)]
@@ -102,9 +122,10 @@ fn init_rectangle(context: &Rc<glium::backend::Context>) -> RectData {
     let vertex_buffer = glium::VertexBuffer::new(context, &shape).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
+    let (vertex_source,frag_source) = get_shader_source!(context,"rectangle");
     let program = glium::Program::from_source(context,
-                                              include_str!("shader/rectangle.v.glsl"),
-                                              include_str!("shader/rectangle.f.glsl"),
+                                              vertex_source,
+                                              frag_source,
                                               None)
                       .unwrap();
 
@@ -195,9 +216,10 @@ fn init_image(context: &Rc<glium::backend::Context>) -> ImageData {
     let vertex_buffer = glium::VertexBuffer::new(context, &shape).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
+    let (vertex_source,frag_source) = get_shader_source!(context,"image");
     let program = glium::Program::from_source(context,
-                                              include_str!("shader/image.v.glsl"),
-                                              include_str!("shader/image.f.glsl"),
+                                              vertex_source,
+                                              frag_source,
                                               None)
                       .unwrap();
 
@@ -227,7 +249,7 @@ pub fn draw_image(drawer: &mut Drawer, image: &Texture, x: i32, y: i32, scale: i
                 &uniform! {
                     projection: drawer.projection,
                     model: model,
-                    texture: image.tex.sampled().magnify_filter(mag_filter)},
+                    image: image.tex.sampled().magnify_filter(mag_filter)},
                 &drawer.params)
           .unwrap();
 
