@@ -5,10 +5,11 @@ extern crate cgmath;
 use glium::{Surface,Version, Api};
 use std::rc::Rc;
 
+#[derive(Clone)]
 pub struct Device {
     context: Rc<glium::backend::Context>,
-    rect_data: RectData,
-    image_data: ImageData,
+    rect_data: Rc<RectData>,
+    image_data: Rc<ImageData>,
 }
 
 impl Device {
@@ -17,8 +18,8 @@ impl Device {
         let image_data = init_image(context);
         Device {
             context: context.clone(),
-            rect_data: rect_data,
-            image_data: image_data,
+            rect_data: Rc::new(rect_data),
+            image_data: Rc::new(image_data),
         }
     }
 
@@ -27,15 +28,15 @@ impl Device {
     }
 }
 
-pub struct Drawer<'s> {
+pub struct Drawer<'a> {
     frame: glium::Frame,
-    device: &'s Device,
+    device: Device,
     projection: [[f32; 4]; 4],
-    params: glium::DrawParameters<'s>,
+    params: glium::DrawParameters<'a>,
 }
 
-impl<'s> Drawer<'s> {
-    pub fn new(device: &'s Device) -> Drawer<'s> {
+impl<'a> Drawer<'a> {
+    pub fn new(device: &Device) -> Drawer {
         let (w, h) = device.context.get_framebuffer_dimensions();
         let frame = glium::Frame::new(device.context.clone(), (w, h));
         let mut params: glium::DrawParameters = Default::default();
@@ -52,7 +53,7 @@ impl<'s> Drawer<'s> {
         Drawer {
             frame: frame,
             params: params,
-            device: device,
+            device: device.clone(),
             projection: projection,
         }
     }
